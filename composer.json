@@ -1,6 +1,6 @@
 {
   "name": "portchain/stream-sea-client-php",
-  "description": "PHP Client for StreamSea",
+  "description": "PHP Client for StreamSea server",
   "type": "library",
   "license": "MIT",
   "minimum-stability": "beta",
