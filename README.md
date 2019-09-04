@@ -6,7 +6,7 @@ This project provides the ability to communicate with a Stream-Sea server.
 
 ## Setup
 
-We recommend that you use [composer]() to download the latest version of the Stream-Sea client library.
+We recommend that you use [composer](https://getcomposer.org) to download the latest version of the Stream-Sea client library.
 
 
 ## Usage
