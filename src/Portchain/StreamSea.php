@@ -1,5 +1,7 @@
 <?php
 
+  require __DIR__ . "/ValidationException.php";
+
   class StreamSea {
 
     public function __construct(string $remoteUrl, string $appId, string $appSecret) {
@@ -50,20 +52,31 @@
       $curl_response = curl_exec($curl);
       $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-      if ($httpcode !== 200) {
+      if ($httpcode !== 200 && $httpcode > 0) {
         $info = curl_getinfo($curl);
-        error_log('Error during HTTP callout. Additional info: ' . var_export($info));
         curl_close($curl);
-        
-        try {
-          $decoded = json_decode($curl_response);
-        } catch(Exception $err) {
-          error_log('Error: failed to parse the Stream-Sea HTTP response as JSON.', 'The HTTP response code was '.$httpcode . ' and the response content was: ' . $curl_response);
-        }
-        if($decoded && $decoded->response && $decoded->response->message) {
-          throw new Exception($decoded->response->message, $httpcode);
+        if($httpcode > 0) {
+          try {
+            $decoded = json_decode($curl_response);
+          } catch(Exception $err) {
+            error_log('Error: failed to parse the Stream-Sea HTTP response as JSON.', 'The HTTP response code was '.$httpcode . ' and the response content was: ' . $curl_response);
+          }
+          if($decoded && $decoded->message) {
+            if(isset($decoded->errors)) {
+              throw new PayloadValidationException($decoded->message, $decoded->errors);
+            } else {
+              throw new Exception($decoded->message, $httpcode);
+            }
+          } else {
+            throw new Exception('Unknown error. HTTP return code was ' . $httpcode, $httpcode);
+          }
         } else {
-          throw new Exception('Unknown error. HTTP return code was ' . $httpcode, $httpcode);
+          if (curl_errno($curl)) {
+            $error_msg = curl_error($curl);
+            error_log('Error during HTTP callout: ' . $error_msg);
+          } else {
+            error_log('Unknown error during HTTP callout');
+          }
         }
       } else {
         curl_close($curl);
