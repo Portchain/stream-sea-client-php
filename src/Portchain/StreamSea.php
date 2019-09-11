@@ -22,7 +22,7 @@
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($curl, CURLOPT_POST, true);
       curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($curl_post_data));
-      $this->executeCallOutWithErrorHandling($curl);
+      return $this->executeCallOutWithErrorHandling($curl);
 
     }
 
@@ -35,7 +35,7 @@
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($curl, CURLOPT_POST, true);
       curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($schema));
-      $this->executeCallOutWithErrorHandling($curl);
+      return $this->executeCallOutWithErrorHandling($curl);
 
     }
 
@@ -58,28 +58,32 @@
         if($httpcode > 0) {
           try {
             $decoded = json_decode($curl_response);
+            $errorMessage = $decoded->message;
           } catch(Exception $err) {
-            error_log('Error: failed to parse the Stream-Sea HTTP response as JSON.', 'The HTTP response code was '.$httpcode . ' and the response content was: ' . $curl_response);
+            error_log('Error: failed to parse the Stream-Sea HTTP response as JSON. The HTTP response code was '.$httpcode . ' and the response content was: ' . $curl_response);
           }
-          if($decoded && $decoded->message) {
+          if($errorMessage) {
             if(isset($decoded->errors)) {
-              throw new PayloadValidationException($decoded->message, $decoded->errors);
+              return new PayloadValidationException($errorMessage, $decoded->errors);
             } else {
-              throw new Exception($decoded->message, $httpcode);
+              return new Exception($errorMessage, $httpcode);
             }
           } else {
-            throw new Exception('Unknown error. HTTP return code was ' . $httpcode, $httpcode);
+            return new Exception('Unknown error. HTTP return code was ' . $httpcode, $httpcode);
           }
+        }
+      } else if($httpcode == 0) {
+        if (curl_errno($curl)) {
+          $error_msg = curl_error($curl);
+          error_log('Error during HTTP callout: ' . $error_msg);
+          return new Exception($error_msg, 0);
         } else {
-          if (curl_errno($curl)) {
-            $error_msg = curl_error($curl);
-            error_log('Error during HTTP callout: ' . $error_msg);
-          } else {
-            error_log('Unknown error during HTTP callout');
-          }
+          error_log('Unknown error during HTTP callout');
+          return new Exception('Unknown error during HTTP callout', 0);
         }
       } else {
         curl_close($curl);
       }
+      return NULL;
     }
 }

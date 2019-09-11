@@ -8,9 +8,6 @@ require __DIR__ . "/../../src/Portchain/SchemaDefinition.php";
 /** These tests require a running instance of the server to pass successfully */
 final class StreamSeaTest extends TestCase {
 
-  /**
-   * @doesNotPerformAssertions
-   */
   public function testSchemaCanBeDefined(): void {
 
     $streamSea = new StreamSea('http://localhost:3104', 'app123', '01234567890123456789');
@@ -23,29 +20,29 @@ final class StreamSeaTest extends TestCase {
     $portCallSchema->addField('vesselDraft', 'float');
     $portCallSchema->addField('berthingSide', 'enum', ['starboard', 'port']);
 
-    $streamSea->defineStream('portCall_test1', $portCallSchema);
+    $err = $streamSea->defineStream('portCall_test1', $portCallSchema);
+    $this->assertEquals($err, NULL);
     
   }
   
   public function testSchemaVersionsCanNotBeDowngraded(): void {
-    $this->expectException(Exception::class);
-    $this->expectExceptionCode(400);
 
     $streamSea = new StreamSea('http://localhost:3104', 'app123', '01234567890123456789');
     
     $portCallSchema = new SchemaDefinition('1.0.0');
     $portCallSchema->addField('portCallKey', 'string');
-    $streamSea->defineStream('portCall_test2', $portCallSchema);
+    $err = $streamSea->defineStream('portCall_test2', $portCallSchema);
+    $this->assertEquals($err, NULL);
 
     $portCallSchema = new SchemaDefinition('0.1.0');
     $portCallSchema->addField('portCallKey', 'string');
-    $streamSea->defineStream('portCall_test2', $portCallSchema);
+    $err = $streamSea->defineStream('portCall_test2', $portCallSchema);
+    $this->assertNotEquals($err, NULL);
+    $this->assertEquals($err->getCode(), 400);
+    $this->assertEquals($err->getMessage(), 'The version pushed for the schema [portCall_test2] is [0.1.0] but there is already an older version defined [1.0.0]');
     
   }
 
-  /**
-   * @doesNotPerformAssertions
-   */
   public function testMessageCanBePublished(): void {
     $streamSea = new StreamSea('http://localhost:3104', 'app123', '01234567890123456789');
     
@@ -57,9 +54,10 @@ final class StreamSeaTest extends TestCase {
     $portCallSchema->addField('vesselDraft', 'float');
     $portCallSchema->addField('berthingSide', 'enum', ['starboard', 'port']);
 
-    $streamSea->defineStream('portCall_test3', $portCallSchema);
+    $err = $streamSea->defineStream('portCall_test3', $portCallSchema);
+    $this->assertEquals($err, NULL);
 
-    $streamSea->publish('portCall_test3',  array(
+    $err = $streamSea->publish('portCall_test3',  array(
       'portCallKey' => 'XYZ123',
       'arrival' => (new DateTime('2019-01-23 10:00'))->format('Y-m-d\TH:i:s\Z'),
       'departure' => (new DateTime('2019-01-23 18:00'))->format('Y-m-d\TH:i:s\Z'),
@@ -67,6 +65,33 @@ final class StreamSeaTest extends TestCase {
       'vesselDraft' => 12.4,
       'berthingSide' => 'starboard'
     ));
+    $this->assertEquals($err, NULL);
+  }
+  
+  public function testCredentialsInvalid(): void {
+
+    $streamSea = new StreamSea('http://localhost:3104', 'foo', 'bar');
+    
+    $err = $streamSea->publish('portCall_test4', array(
+      'foo' => 'bar',
+    ));
+    $this->assertNotEquals($err, NULL);
+    $this->assertEquals($err->getCode(), 401);
+    $this->assertEquals($err->getMessage(), 'The credentials are present and well formed but invalid.');
+
+  }
+  
+  public function testDNSResolutionFailure(): void {
+
+    $streamSea = new StreamSea('http://unknown-domain.stream-sea.com', 'app123', '01234567890123456789');
+    
+    $err = $streamSea->publish('portCall_test4', array(
+      'foo' => 'bar',
+    ));
+    $this->assertNotEquals($err, NULL);
+    $this->assertEquals($err->getCode(), 0);
+    $this->assertEquals($err->getMessage(), 'Could not resolve host: unknown-domain.stream-sea.com');
+    
   }
 }
 
