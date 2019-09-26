@@ -93,6 +93,83 @@ final class StreamSeaTest extends TestCase {
     $this->assertEquals($err->getMessage(), 'Could not resolve host: unknown-domain.stream-sea.com');
     
   }
+
+  public function testMoves(): void {
+    $streamSea = new StreamSea('http://localhost:3104', 'app123', '01234567890123456789');
+
+    $err = $streamSea->publish('moves',  array(
+      'key' => 'XYZ123',
+      'loadCountExpected' => 99,
+      'dischargeCountExpected' => 99,
+      'restowCountExpected' => 99,
+      'loadCountAchieved' => 99,
+      'dischargeCountAchieved' => 99,
+      'restowCountAchieved' => 99,
+
+      'moveCompletedTime' => (new DateTime('2019-01-23 10:00'))->format('Y-m-d\TH:i:s\Z'),
+      'containerNumber' => 'MSKU8966700',
+      'containerCategory' => 'TRSHP',
+      'containerFreightKind' => 'MTY',
+      'containerLineOperator' => 'MSK',
+      'containerMoveKind' => 'LOAD',
+      'containerMoveFromLocation' => 'YARD',
+      'containerMoveFromLocationPosition' => '04C30E.1',
+      'containerMoveToLocation' => 'VESSEL',
+      'containerMoveToLocationPosition' => '421072',
+      'containerMovePointOfWork' => 'QC17'
+    ));
+    $this->assertEquals($err, NULL);
+  }
+
+  public function testBatchMoves(): void {
+    $streamSea = new StreamSea('http://localhost:3104', 'app123', '01234567890123456789');
+
+    $err = $streamSea->publish('moves',  array(
+      array(
+        'key' => 'XYZ123',
+        'loadCountExpected' => 99,
+        'dischargeCountExpected' => 99,
+        'restowCountExpected' => 99,
+        'loadCountAchieved' => 99,
+        'dischargeCountAchieved' => 99,
+        'restowCountAchieved' => 99,
+
+        'moveCompletedTime' => (new DateTime('2019-01-23 10:00'))->format('Y-m-d\TH:i:s\Z'),
+        'containerNumber' => 'MSKU8966700',
+        'containerCategory' => 'TRSHP',
+        'containerFreightKind' => 'MTY',
+        'containerLineOperator' => 'MSK',
+        'containerMoveKind' => 'LOAD',
+        'containerMoveFromLocation' => 'YARD',
+        'containerMoveFromLocationPosition' => '04C30E.1',
+        'containerMoveToLocation' => 'VESSEL',
+        'containerMoveToLocationPosition' => '421072',
+        'containerMovePointOfWork' => 'QC17'
+      ),
+      array(
+        'key' => 'XYZ124',
+        'loadCountExpected' => 99,
+        'dischargeCountExpected' => 99,
+        'restowCountExpected' => 99,
+        'loadCountAchieved' => 99,
+        'dischargeCountAchieved' => 99,
+        'restowCountAchieved' => 99,
+
+        'moveCompletedTime' => (new DateTime('2019-01-23 10:00'))->format('Y-m-d\TH:i:s\Z'),
+        'containerNumber' => 'MSKU8966700',
+        'containerCategory' => 'TRSHP',
+        'containerFreightKind' => 'MTY',
+        'containerLineOperator' => 'MSK',
+        'containerMoveKind' => 'LOAD',
+        'containerMoveFromLocation' => 'YARD',
+        'containerMoveFromLocationPosition' => '04C30E.1',
+        'containerMoveToLocation' => 'VESSEL',
+        'containerMoveToLocationPosition' => '421072',
+        'containerMovePointOfWork' => 'QC17'
+      )
+    ));
+    $this->assertEquals($err, NULL);
+  }
 }
 
 

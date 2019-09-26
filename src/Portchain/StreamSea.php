@@ -21,7 +21,7 @@
       StreamSea::setDefaultHeaders($curl);
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($curl, CURLOPT_POST, true);
-      curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($curl_post_data));
+      curl_setopt($curl, CURLOPT_POSTFIELDS, gzencode(json_encode($curl_post_data), 9));
       return $this->executeCallOutWithErrorHandling($curl);
 
     }
@@ -34,13 +34,14 @@
       StreamSea::setDefaultHeaders($curl);
       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($curl, CURLOPT_POST, true);
-      curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($schema));
+      curl_setopt($curl, CURLOPT_POSTFIELDS, gzencode(json_encode($schema), 9));
       return $this->executeCallOutWithErrorHandling($curl);
 
     }
 
     private function setDefaultHeaders($curl) {
       curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+        'Content-encoding: gzip',
         'Content-type: application/json',
         'Accept: application/json',
         'Authorization: Basic ' . base64_encode($this->appId . ':' . $this->appSecret)
