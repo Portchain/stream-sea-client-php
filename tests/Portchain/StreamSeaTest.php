@@ -26,6 +26,23 @@ final class StreamSeaTest extends TestCase {
     $streamSea->defineStream('portCall_test1', $portCallSchema);
     
   }
+
+  public function testNestedSchemaCanBeDefined(): void {
+
+    $streamSea = new StreamSea('http://localhost:3104', 'app123', '01234567890123456789');
+    
+    $portCallSchema = new SchemaDefinition('1.0.0');
+    $portCallSchema->addField('vesselVisit', 'string');
+    $portCallSchema->addField('moves','array<object>');
+    $portCallSchema->addParentField('move','object','moves');
+    var_dump($portCallSchema);
+    $portCallSchema->addParentField('name','string','move');
+    $portCallSchema->addParentField('time','date','move');
+    $portCallSchema->addParentField('load','integer','move');
+    var_dump(json_encode($portCallSchema));
+    $streamSea->defineStream('moves_1', $portCallSchema);
+    
+  }
   
   public function testSchemaVersionsCanNotBeDowngraded(): void {
     $this->expectException(Exception::class);

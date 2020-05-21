@@ -7,12 +7,35 @@
     }
 
     public function addField(string $name, string $type, array $optionalEnumValues = array()) {
-      $newField = array('name' => $name, 'type' => $type);
+      $newChild = array('name' => $name, 'type' => $type, 'fields'=>[]);
       if($type === 'enum') {
-        $newField['enum'] = $optionalEnumValues;
+        $newChild['enum'] = $optionalEnumValues;
       }
-      $this->fields[] = $newField;
+      $this->fields[] = $newChild;
     }
+
+    public function addParentField(string $name, string $type, string $parentField, array $optionalEnumValues = array()) {
+      $newChild =  array('name' => $name, 'type' => $type, 'fields'=>[]);
+      if($type === 'enum') {
+        $newChild['enum'] = $optionalEnumValues;
+      }
+ 
+      $fake_root= array('name' => 'root', 'type' => 'object', 'fields'=>$this->fields);
+      $this->appendChild($fake_root, $parentField, $newChild);
+      $this->fields = $fake_root['fields'];
+  
+    }
+
+    public function appendChild(&$parent, $id, $newChild){
+      if($parent['name']==$id) {
+        array_push($parent['fields'], $newChild);
+        return; 
+      }
+     
+      foreach ($parent['fields'] as &$field){
+        $found = $this->appendChild($field, $id, $newChild);
+      } 
+    }  
 
     public function jsonSerialize() {
       return array('version' => $this->version, 'fields' => $this->fields);
