@@ -7,34 +7,37 @@
     }
 
     public function addField(string $name, string $type, array $optionalEnumValues = array()) {
-      $newChild = array('name' => $name, 'type' => $type, 'fields'=>[]);
+      $this->fields[] = $this->generateNewChild($name, $type, $optionalEnumValues);
+    }
+
+    public function addChildField(string $name, string $type, string $parentField, array $optionalEnumValues = array()) {
+      $newChild =  $this->generateNewChild($name, $type, $optionalEnumValues);
+      $array_root= array('name' => 'root', 'type' => 'object', 'fields'=> $this->fields);
+      $this->appendChild($array_root, $parentField, $newChild);
+      $this->fields = $array_root['fields'];
+    }
+
+    private function generateNewChild(string $name, string $type, array $optionalEnumValues = array()){
+      $newChild = array('name' => $name, 'type' => $type);
       if($type === 'enum') {
         $newChild['enum'] = $optionalEnumValues;
       }
-      $this->fields[] = $newChild;
-    }
-
-    public function addParentField(string $name, string $type, string $parentField, array $optionalEnumValues = array()) {
-      $newChild =  array('name' => $name, 'type' => $type, 'fields'=>[]);
-      if($type === 'enum') {
-        $newChild['enum'] = $optionalEnumValues;
+      if($type == 'array<object>' or $type=='object') {
+        $newChild['fields'] = [];
       }
- 
-      $fake_root= array('name' => 'root', 'type' => 'object', 'fields'=>$this->fields);
-      $this->appendChild($fake_root, $parentField, $newChild);
-      $this->fields = $fake_root['fields'];
-  
+      return $newChild;
     }
 
-    public function appendChild(&$parent, $id, $newChild){
-      if($parent['name']==$id) {
-        array_push($parent['fields'], $newChild);
+    private function appendChild(&$current, $parentFieldName, $newChild){
+      if($current['name'] == $parentFieldName) {
+        array_push($current['fields'], $newChild);
         return; 
       }
-     
-      foreach ($parent['fields'] as &$field){
-        $found = $this->appendChild($field, $id, $newChild);
-      } 
+      if (array_key_exists('fields',$current)){
+        foreach ($current['fields'] as &$field){
+          $this->appendChild($field, $parentFieldName, $newChild);
+        } 
+      }
     }  
 
     public function jsonSerialize() {
