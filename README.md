@@ -27,6 +27,10 @@ We recommend that you use [composer](https://getcomposer.org) to download the la
   $portCallSchema->addField('vesselImo', 'integer');
   $portCallSchema->addField('vesselDraft', 'float');
   $portCallSchema->addField('berthingSide', 'enum', ['starboard', 'port']);
+  $portCallSchema->addField('moves', 'array<object>');
+  $portCallSchema->addChildField('load','string','moves');
+  $portCallSchema->addChildField('discharge','string','moves');
+  $portCallSchema->addChildField('restow','string','moves');
 
   // returns NULL or an Exception object
   $err = $streamSea->defineStream('portCall', $schema); 
@@ -49,6 +53,23 @@ We recommend that you use [composer](https://getcomposer.org) to download the la
     'departure' => date('2019-01-23 18:00'),
     'vesselImo' => 9999999,
     'vesselDraft' => 12.4,
-    'berthingSide' => 'starboard'
+    'berthingSide' => 'starboard',
+    'moves' => array(
+      array(  
+        'load' => '1',
+        'discharge' => '0',
+        'restow' => '0'
+      ),
+      array(  
+        'load' => '0',
+        'discharge' => '1',
+        'restow' => '0'
+      ),
+      array(  
+        'load' => '0',
+        'discharge' => '0',
+        'restow' => '1'
+      )
+    )
   ));
 ```
