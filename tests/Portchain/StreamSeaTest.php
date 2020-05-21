@@ -24,6 +24,21 @@ final class StreamSeaTest extends TestCase {
     $this->assertEquals($err, NULL);
     
   }
+
+  public function testNestedSchemaCanBeDefined(): void {
+
+    $streamSea = new StreamSea('http://localhost:3104', 'app123', '01234567890123456789');
+    
+    $portCallSchema = new SchemaDefinition('1.0.0');
+    $portCallSchema->addField('topLevelProp1', 'string');
+    $portCallSchema->addField('topLevelArrayOfObj','array<object>');
+    $portCallSchema->addParentField('nestedObjProp1','string','topLevelArrayOfObj');
+    $portCallSchema->addParentField('nestedObjProp2','date','topLevelArrayOfObj');
+    $portCallSchema->addParentField('nestedObjProp3','integer','topLevelArrayOfObj');
+  
+    $streamSea->defineStream('testmoves_1', $portCallSchema);
+    
+  }
   
   public function testSchemaVersionsCanNotBeDowngraded(): void {
 
